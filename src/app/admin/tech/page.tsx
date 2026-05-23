@@ -80,44 +80,69 @@ export default function TechStackPage() {
 
     let logoUrl = preview;
 
-    if (logo) {
-      const fileName = `tech-${Date.now()}-${logo.name}`;
+    // 🔥 PERBAIKAN: Hanya upload jika 'logo' adalah File asli, bukan sekadar link preview
+    if (logo instanceof File) {
+      const fileName = `tech-${Date.now()}-${logo.name.replace(/\s+/g, '-')}`;
 
       const { error: uploadError } = await supabase.storage
         .from("tech-stack")
         .upload(fileName, logo);
 
-      if (!uploadError) {
-        const { data } = supabase.storage
-          .from("tech-stack")
-          .getPublicUrl(fileName);
-
-        logoUrl = data.publicUrl;
+      if (uploadError) {
+        console.error("Upload Error:", uploadError);
+        Swal.fire("Gagal!", "Foto logo gagal diunggah. Cek izin Storage.", "error");
+        setSaving(false);
+        return;
       }
+
+      const { data } = supabase.storage
+        .from("tech-stack")
+        .getPublicUrl(fileName);
+
+      logoUrl = data.publicUrl;
     }
 
+    let dbError;
+
     if (editId) {
-      await supabase
+      const { error } = await supabase
         .from("tech_stack")
         .update({
           name,
           logo_url: logoUrl,
         })
         .eq("id", editId);
+      dbError = error;
     } else {
-      await supabase.from("tech_stack").insert([
+      const { error } = await supabase.from("tech_stack").insert([
         {
           name,
-          logo_url: logoUrl,
+          logo_url: logoUrl, // Memastikan bukan link blob yang tersimpan
         },
       ]);
+      dbError = error;
     }
 
     setSaving(false);
-    setOpen(false);
-    resetForm();
 
-    fetchTechStacks();
+    // 🔥 PERBAIKAN: Memberikan notifikasi sukses/gagal yang jelas
+    if (dbError) {
+      console.error("DB Error:", dbError);
+      Swal.fire("Gagal!", "Data gagal disimpan ke database. Cek izin tabel.", "error");
+    } else {
+      Swal.fire({
+        title: "Berhasil!",
+        text: "Tech Stack berhasil disimpan.",
+        icon: "success",
+        timer: 1500,
+        showConfirmButton: false,
+        background: "#111",
+        color: "#fff",
+      });
+      setOpen(false);
+      resetForm();
+      fetchTechStacks();
+    }
   };
 
   const handleDelete = async (id: number) => {
@@ -314,7 +339,7 @@ export default function TechStackPage() {
 
             {/* INPUT */}
             <input
-              placeholder="Tech Name"
+              placeholder="Tech Name (e.g. Laravel, React.js)"
               value={name}
               onChange={(e) => setName(e.target.value)}
               className="w-full px-4 py-3 rounded-2xl bg-[#0f0f0f] border border-white/10 outline-none mb-5 text-sm"

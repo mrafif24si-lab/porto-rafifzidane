@@ -9,13 +9,16 @@ import {
   Layers,
   Menu,
   X,
+  LogOut,
 } from "lucide-react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
+import { supabase } from "@/lib/supabase";
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
 
   const [open, setOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
@@ -56,13 +59,18 @@ export default function Sidebar() {
     checkMobile();
     window.addEventListener("resize", checkMobile);
 
-    return () =>
-      window.removeEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
   useEffect(() => {
     setOpen(false);
   }, [pathname]);
+
+  // Fungsi Log Out
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    router.push("/admin/login"); // Ubah menjadi "/admin/login" jika rute login-mu berbeda
+  };
 
   const SidebarContent = ({
     hideTitle = false,
@@ -84,11 +92,7 @@ export default function Sidebar() {
             const active = pathname === menu.path;
 
             return (
-              <Link
-                key={i}
-                href={menu.path}
-                className="block"
-              >
+              <Link key={i} href={menu.path} className="block">
                 <motion.div
                   whileHover={{
                     x: 6,
@@ -148,8 +152,23 @@ export default function Sidebar() {
       </div>
 
       {/* BOTTOM */}
-      <div className="text-xs text-white/35 tracking-wide">
-        © 2026 Admin
+      <div className="mt-auto">
+        <button
+          onClick={handleLogout}
+          className="w-full flex items-center gap-3 px-4 py-3 mb-4 rounded-xl text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all duration-300 group"
+        >
+          <motion.div
+            whileHover={{ x: -4 }}
+            transition={{ type: "spring", stiffness: 300 }}
+          >
+            <LogOut size={17} />
+          </motion.div>
+          <span className="text-sm font-medium tracking-wide">Log Out</span>
+        </button>
+
+        <div className="text-xs text-white/35 tracking-wide px-4">
+          © 2026 Admin
+        </div>
       </div>
     </>
   );
