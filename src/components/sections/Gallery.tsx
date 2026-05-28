@@ -1,6 +1,7 @@
 "use client";
 
-import { motion } from "framer-motion";
+// 1. Tambahkan import Transition dari framer-motion
+import { motion, Transition } from "framer-motion";
 
 export default function Gallery() {
   // Logika otomatis untuk memanggil 25 gambar dari g1.jpeg sampai g25.jpeg
@@ -10,8 +11,8 @@ export default function Gallery() {
     src: `/images/g${i + 1}.jpeg`,
   }));
 
-  // Konfigurasi transisi standar yang sangat smooth
-  const smoothTransition = { duration: 0.8, ease: [0.22, 1, 0.36, 1] };
+  // 2. Beri label tipe data : Transition di sini agar TypeScript tidak cerewet
+  const smoothTransition: Transition = { duration: 0.8, ease: [0.22, 1, 0.36, 1] };
 
   // Konfigurasi Stagger (Efek Muncul Beruntun) untuk Grid
   const containerVariants = {
@@ -19,7 +20,7 @@ export default function Gallery() {
     visible: {
       opacity: 1,
       transition: {
-        delayChildren: 0.2, // 🔥 PERBAIKAN: Menunggu 0.2 detik setelah refresh agar layar siap
+        delayChildren: 0.2, 
         staggerChildren: 0.08,
       },
     },
@@ -43,8 +44,8 @@ export default function Gallery() {
         <motion.h2
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: false, amount: 0.2 }} // 🔥 PERBAIKAN: once diubah ke false
-          transition={smoothTransition}
+          viewport={{ once: false, amount: 0.2 }}
+          transition={smoothTransition} // Garis merah di sini sekarang sudah hilang!
           className="text-3xl md:text-4xl font-bold mb-10 text-[var(--text-primary)] tracking-tight"
         >
           Galeri
@@ -55,7 +56,7 @@ export default function Gallery() {
           variants={containerVariants}
           initial="hidden"
           whileInView="visible"
-          viewport={{ once: false, amount: 0.1 }} // 🔥 PERBAIKAN: once diubah ke false
+          viewport={{ once: false, amount: 0.1 }} 
           className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-5"
         >
           {galleryItems.map((item) => (
